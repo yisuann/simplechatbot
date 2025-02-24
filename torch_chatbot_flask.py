@@ -7,7 +7,7 @@ import torch
 app = Flask(__name__)
 
 # Load the pre-trained model and tokenizer
-model_name = "microsoft/DialoGPT-medium"
+model_name = "microsoft/DialoGPT-small"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name)
 
@@ -40,7 +40,7 @@ def chat():
     chat_history_ids = torch.cat([chat_history_ids, new_input_ids], dim=-1) if chat_history_ids is not None else new_input_ids
 
     # Truncate history if it exceeds the maximum length
-    max_history_length = 1000  # Adjust as needed
+    max_history_length = 500  # Adjust as needed
     if chat_history_ids.shape[-1] > max_history_length:
         chat_history_ids = chat_history_ids[:, -max_history_length:]
 
