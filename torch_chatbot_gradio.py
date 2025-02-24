@@ -1,13 +1,9 @@
-#pip install transformers torch flask
-
-from flask import Flask, request, jsonify
+import gradio as gr
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
-app = Flask(__name__)
-
 # Load the pre-trained model and tokenizer
-model_name = "microsoft/DialoGPT-small"
+model_name = "microsoft/DialoGPT-medium"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name)
 
@@ -18,20 +14,12 @@ model.to(device)
 # Initialize chat history
 chat_history_ids = None
 
-@app.route("/chat", methods=["POST"])
-def chat():
+def chat(user_input):
     global chat_history_ids
 
-    # Check if the Content-Type is application/json
-    if not request.is_json:
-        return jsonify({"error": "Content-Type must be application/json"}), 400
-
-    # Get user input from the request
-    user_input = request.json.get("message")
-    if not user_input:
-        return jsonify({"error": "No message provided"}), 400
+    # Exit condition
     if user_input.lower() == "exit":
-        return jsonify({"response": "Goodbye!"})
+        return "Goodbye!"
 
     # Tokenize the user input and add to chat history
     new_input_ids = tokenizer.encode(user_input + tokenizer.eos_token, return_tensors="pt").to(device)
@@ -61,8 +49,16 @@ def chat():
     # Update chat history with the bot's response
     chat_history_ids = response_ids
 
-    # Return the bot's response
-    return jsonify({"response": bot_response})
+    return bot_response
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+# Create a Gradio interface
+iface = gr.Interface(
+    fn=chat,
+    inputs="text",
+    outputs="text",
+    title="Chatbot",
+    description="A simple chatbot using DialoGPT-medium.",
+)
+
+# Launch the app
+iface.launch()
